@@ -21,21 +21,22 @@ namespace Timesharp {
 
 			// Represents the list of NIST servers
 			string[] servers = new string[] {
-						 "64.90.182.55",
-						 "206.246.118.250",
-						 "207.200.81.113",
-						 "128.138.188.172",
-						 "64.113.32.5",
-						 "64.147.116.229",
-						 "64.125.78.85",
-						 "128.138.188.172"
-						  };
+				"64.90.182.55",
+				"206.246.118.250",
+				"207.200.81.113",
+				"128.138.188.172",
+				"64.113.32.5",
+				"64.147.116.229",
+				"64.125.78.85",
+				"128.138.188.172"
+			};
 
 			// Try each server in random order to avoid blocked requests due to too frequent request
 			for(int i = 0; i < 5; i++) {
+				string hostname = servers[ran.Next(0, servers.Length)];
 				try {
 					// Open a StreamReader to a random time server
-					StreamReader reader = new StreamReader(new System.Net.Sockets.TcpClient(servers[ran.Next(0, servers.Length)], 13).GetStream());
+					StreamReader reader = new StreamReader(new System.Net.Sockets.TcpClient(hostname, 13).GetStream());
 					serverResponse = reader.ReadToEnd();
 					reader.Close();
 
@@ -65,7 +66,7 @@ namespace Timesharp {
 						break;
 					}
 
-				} catch(Exception ex) {
+				} catch {
 					/* Do Nothing...try the next server */
 				}
 			}
@@ -127,6 +128,16 @@ namespace Timesharp {
 				wMilliseconds = (ushort)dt.Millisecond
 			};
 			return SetLocalTime(ref sysTime);
+		}
+
+		#endregion
+
+		#region [SYNC TIME]
+
+		public static bool SyncTime() {
+			DateTime dt = GetNistDtTcp(true);
+
+			return true;
 		}
 
 		#endregion
