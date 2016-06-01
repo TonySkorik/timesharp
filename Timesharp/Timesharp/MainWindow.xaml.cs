@@ -44,6 +44,7 @@ namespace TimesharpUi {
 			base.OnSourceInitialized(e);
 			_createNotifyIcon();
 		}
+
 		#region [WINDOW EVENTS]
 		private void Window_Loaded(object sender, RoutedEventArgs e) {
 			//MainUi.DataContext = new TimesharpViewModel();
