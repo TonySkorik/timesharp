@@ -1,12 +1,42 @@
-﻿<Window x:Class="Timesharp.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Timesharp"
-        mc:Ignorable="d"
-        Title="TimeSharp" Height="350" Width="525">
-    <Grid>
-        
-    </Grid>
+﻿<Window x:Class="TimesharpUi.MainWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:local="clr-namespace:TimesharpUi"
+		mc:Ignorable="d"
+		Title="TimeSharp" 
+		Height="250" 
+		Width="325"
+		WindowStartupLocation="CenterScreen"
+		ShowInTaskbar="False"
+		Icon="Icons/clock.ico"
+		Loaded="Window_Loaded"
+		Closing="MainWindow_OnClosing"
+		>
+	<Window.Resources>
+		<ContextMenu x:Key="TrayMenu">
+			<MenuItem Header="Show / Hide" Click="_showHideMainWindow" />
+			<!--			<MenuItem Header="Item2" />-->
+
+			<Separator />
+			<MenuItem Header="Sync &amp; Set" Click="SyncSetMenu_OnClick" />
+			<Separator />
+			<MenuItem Header="Exit" Click="TrayMenuExit_OnClick"/>
+		</ContextMenu>
+	</Window.Resources>
+
+	<Grid x:Name="MainUi">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>	
+		<TextBox Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="30" Text="{Binding Path=DtSyncronized}"/>
+		<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+			<Button Content="Sync" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" />
+			<Button Content="Set" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10"/>
+		</StackPanel>
+		
+	</Grid>
 </Window>

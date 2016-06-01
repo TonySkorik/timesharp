@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Timesharp {
+namespace TimesharpUi {
 	static class Timesharp {
 		#region [GET Time]
 		
@@ -18,6 +18,7 @@ namespace Timesharp {
 			Random ran = new Random(DateTime.Now.Millisecond);
 			DateTime date = DateTime.Today;
 			string serverResponse = string.Empty;
+			bool success = false;
 
 			// Represents the list of NIST servers
 			string[] servers = new string[] {
@@ -32,7 +33,7 @@ namespace Timesharp {
 			};
 
 			// Try each server in random order to avoid blocked requests due to too frequent request
-			for(int i = 0; i < 5; i++) {
+			for(int i = 0; i < servers.Length; i++) {
 				string hostname = servers[ran.Next(0, servers.Length)];
 				try {
 					// Open a StreamReader to a random time server
@@ -63,6 +64,7 @@ namespace Timesharp {
 							date = date.ToLocalTime();
 
 						// Exit the loop
+						success = true;
 						break;
 					}
 
@@ -70,13 +72,17 @@ namespace Timesharp {
 					/* Do Nothing...try the next server */
 				}
 			}
+			if (!success) {
+				return DateTime.MinValue;
+			}
 
 			return date;
 		}
 		#endregion
 
 		#region [WEB REQUEST Method]
-		public static DateTime GetNistDtWeb() {
+		public static DateTime GetNistDtWeb(bool convertToLocalTime) {
+			bool success = false;
 			DateTime dateTime = DateTime.MinValue;
 
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://nist.time.gov/actualtime.cgi?lzbc=siqm9b");
@@ -91,9 +97,15 @@ namespace Timesharp {
 				string html = stream.ReadToEnd();//<timestamp time=\"1395772696469995\" delay=\"1395772696469995\"/>
 				string time = Regex.Match(html, @"(?<=\btime="")[^""]*").Value;
 				double milliseconds = Convert.ToInt64(time) / 1000.0;
-				dateTime = new DateTime(1970, 1, 1).AddMilliseconds(milliseconds).ToLocalTime();
+				dateTime = new DateTime(1970, 1, 1).AddMilliseconds(milliseconds);
+				if (convertToLocalTime) {
+					dateTime = dateTime.ToLocalTime();
+				}
+				success = true;
 			}
-
+			if (!success) {
+				return DateTime.MinValue;
+			}
 			return dateTime;
 		}
 		#endregion
