@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
@@ -22,6 +23,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml.Linq;
 using ContextMenu = System.Windows.Controls.ContextMenu;
+using Timer = System.Timers;
 
 
 namespace TimesharpUi {
@@ -35,9 +37,14 @@ namespace TimesharpUi {
 		public NotifyIcon TrayIcon;
 		public ContextMenu TrayMenu;
 		public WindowState CurrentWindowState { set; get; }
+		private TimesharpViewModel _viewModel;
+		
+		private Timer.Timer _closingTimer;
 
 		public MainWindow() {
+			_viewModel = new TimesharpViewModel();
 			InitializeComponent();
+			MainUI.Title = $"TimeSharp v{Assembly.GetExecutingAssembly().GetName().Version}";
 		}
 
 		protected override void OnSourceInitialized(EventArgs e) {
@@ -46,10 +53,20 @@ namespace TimesharpUi {
 		}
 
 		#region [WINDOW EVENTS]
-		private void Window_Loaded(object sender, RoutedEventArgs e) {
-			//MainUi.DataContext = new TimesharpViewModel();
+		private async void Window_Loaded(object sender, RoutedEventArgs e) {
+			MainUi.DataContext = _viewModel;
 			AllowWindowClose = false;
+
+			//if program started from sceduler
+			string[] args= Environment.GetCommandLineArgs();
+			if (args.Length > 1) {
+				AllowWindowClose = true;
+				_viewModel.IsAutoloaded = true;
+				await _viewModel.SetTimeAsync();
+				autoclose();
+			}
 		}
+
 		private void MainWindow_OnClosing(object sender, CancelEventArgs e) {
 			if(!AllowWindowClose) {
 				if(_exitDialog()) {
@@ -57,6 +74,27 @@ namespace TimesharpUi {
 				} else {
 					e.Cancel = true;
 				}
+			}
+		}
+
+		#endregion
+
+		#region [AUTOCLOSE]
+
+		private void autoclose() {
+			if(_viewModel.SetTimeSuccess != null && _viewModel.SetTimeSuccess.Value) {
+				MainUI.Title = "Setting Success! Closing in 10 sec";
+				AllowWindowClose = true;
+
+				_closingTimer = new Timer.Timer() {
+					Interval = 10000 //10 seconds
+				};
+				_closingTimer.Elapsed += (o, args) => {
+					Dispatcher.Invoke(Close);
+				};
+				_closingTimer.Start();
+			} else {
+				MainUI.Title = "Setting time error!";
 			}
 		}
 
@@ -120,6 +158,53 @@ namespace TimesharpUi {
 		private void SyncSetMenu_OnClick(object sender, RoutedEventArgs e) {
 		}
 		#endregion
-		
+
+		#region [BUTTONS]
+		private async void ButtonSync_OnClick(object sender, RoutedEventArgs e) {
+			MainUI.Title = "Fetching time!";
+			await _viewModel.FetchTimeAsync();
+			if (_viewModel.FetchSuccess.HasValue && _viewModel.FetchSuccess.Value) {
+				MainUI.Title = "Fetching success!";
+			} else {
+				MainUI.Title = "Fetching error!";
+			}
+		}
+
+		private async void ButtonSet_OnClick(object sender, RoutedEventArgs e) {
+			MessageBoxButton mb = MessageBoxButton.YesNo;
+			MessageBoxImage mbImage = MessageBoxImage.Question;
+			/*
+			if (_viewModel.FetchSuccess.HasValue) {
+				if (!_viewModel.FetchSuccess.Value) {
+					if (System.Windows.MessageBox.Show("Do you want to fetch time from server again?", "Time fetch error", mb, mbImage)
+						== MessageBoxResult.Yes) {
+						await _viewModel.FetchTimeAsync();
+					}
+					return;
+				}
+			} else {
+				if (System.Windows.MessageBox.Show("Do you want to fetch time from server?", "Time not yet fetched", mb, mbImage)
+					== MessageBoxResult.Yes) {
+					await _viewModel.FetchTimeAsync();
+				}
+
+				return;
+			}
+			*/
+			MainUI.Title = "Setting time!";
+			await _viewModel.SetTimeAsync();
+			autoclose();
+		}
+
+		private void ButtonSchedule_OnClick(object sender, RoutedEventArgs e) {
+			_viewModel.ScheduleTask(Assembly.GetExecutingAssembly().Location);
+		}
+
+		private void ButtonUnschedule_OnClick(object sender, RoutedEventArgs e) {
+			_viewModel.UnScheduleTask();
+		}
+		#endregion
+
+
 	}
 }

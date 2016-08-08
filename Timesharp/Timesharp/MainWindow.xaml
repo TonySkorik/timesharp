@@ -4,10 +4,16 @@
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:local="clr-namespace:TimesharpUi"
+		xmlns:core="clr-namespace:Timesharp"
 		mc:Ignorable="d"
+		x:Name="MainUI"
 		Title="TimeSharp" 
-		Height="250" 
-		Width="325"
+		MinHeight="170"
+		MinWidth="370"
+		MaxHeight="170"
+		MaxWidth="370"
+		d:DesignHeight="170" 
+		d:DesignWidth="370"
 		WindowStartupLocation="CenterScreen"
 		ShowInTaskbar="False"
 		Icon="Icons/clock.ico"
@@ -24,19 +30,23 @@
 			<Separator />
 			<MenuItem Header="Exit" Click="TrayMenuExit_OnClick"/>
 		</ContextMenu>
+		<core:BoolToColorConverter x:Key="BoolToColorConverter"/>
+		<core:MinDateTimeToNotFetchedConverter x:Key="MinDateTimeToNotFetchedConverter"/>
+		<core:InvertableBooleanToVisibilityConverter x:Key="InvertableBooleanToVisibilityConverter"/>
+		<core:InvertableBooleanConverter x:Key="InvertableBooleanConverter"/>
 	</Window.Resources>
 
 	<Grid x:Name="MainUi">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="*"/>
-			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>	
-		<TextBox Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="30" Text="{Binding Path=DtSyncronized}"/>
+		<TextBox BorderThickness="0" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="25" Text="{Binding Path=DtFetched, Converter={StaticResource MinDateTimeToNotFetchedConverter}}"/>
 		<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-			<Button Content="Sync" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" />
-			<Button Content="Set" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10"/>
+			<Button Background="{Binding Path=FetchSuccess, Converter={StaticResource BoolToColorConverter}}" Content="Fetch" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" Click="ButtonSync_OnClick"/>
+			<Button Background="{Binding Path=SetTimeSuccess, Converter={StaticResource BoolToColorConverter}}" Content="Set" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" Click="ButtonSet_OnClick"/>
+			<Button Background="Aqua" IsEnabled="{Binding Path=IsAutoloaded, Converter={StaticResource InvertableBooleanConverter}, ConverterParameter=Inverted}" Visibility="{Binding Path=TaskIsScheduled, Converter={StaticResource InvertableBooleanToVisibilityConverter}, ConverterParameter=Inverted}" Content="Schedule" Width="70" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" ToolTip="Schedule time update" Click="ButtonSchedule_OnClick"/>
+			<Button Background="BurlyWood" IsEnabled="{Binding Path=IsAutoloaded, Converter={StaticResource InvertableBooleanConverter}, ConverterParameter=Inverted}" Visibility="{Binding Path=TaskIsScheduled, Converter={StaticResource InvertableBooleanToVisibilityConverter}, ConverterParameter=Normal}" Content="Unschedule" Width="70" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" ToolTip="Remove time update from scheduler" Click="ButtonUnschedule_OnClick"/>
 		</StackPanel>
-		
 	</Grid>
 </Window>

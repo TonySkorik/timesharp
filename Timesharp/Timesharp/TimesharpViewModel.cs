@@ -6,65 +6,144 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using Scheduler = Microsoft.Win32.TaskScheduler;
+
 namespace TimesharpUi {
 	public class TimesharpViewModel:INotifyPropertyChanged {
+		
+		#region [NOTIFY PROPERTY CHANGED]
 		public event PropertyChangedEventHandler PropertyChanged;
 		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "") {
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
+		#endregion
 
-		private DateTime _dtSyncronized;
-		public DateTime DtSyncronized {
+		#region [P & F]
+
+		public const string _taskName = "TimeSharp_sync";
+
+		private DateTime _dtFetched;
+		public DateTime DtFetched {
 			set {
-				_dtSyncronized = value;
+				_dtFetched = value;
 				NotifyPropertyChanged();
 			}
 			get {
-				return _dtSyncronized;
+				return _dtFetched;
 			}
 		}
-		private bool _syncFailed;
-		public bool SyncFailed {
-			get { return _syncFailed; }
+		private bool? _fetchSuccess;
+		public bool? FetchSuccess {
+			get { return _fetchSuccess; }
 			set {
-				_syncFailed = value;
+				_fetchSuccess = value;
 				NotifyPropertyChanged();
 			}
 		}
-		private bool _setTimeFailed;
-		public bool SetTimeFailed {
-			get { return _setTimeFailed; }
+		private bool? _setTimeSuccess;
+		public bool? SetTimeSuccess {
+			get { return _setTimeSuccess; }
 			set {
-				_setTimeFailed = value;
+				_setTimeSuccess = value;
 				NotifyPropertyChanged();
 			}
 		}
+		private bool _taskIsScheduled;
+		public bool TaskIsScheduled {
+			get { return _taskIsScheduled; }
+			set {
+				_taskIsScheduled = value;
+				NotifyPropertyChanged();
+			}
+		}
+
+		private bool _isAutoloaded;
+		public bool IsAutoloaded {
+			get { return _isAutoloaded; }
+			set {
+				_isAutoloaded = value;
+				NotifyPropertyChanged();
+			}
+		}
+		#endregion
 
 		public TimesharpViewModel() {
-			DtSyncronized = DateTime.MinValue;
-			SyncTime();
-			SetTimeFailed = false;
+			DtFetched = DateTime.MinValue;
+			FetchSuccess = null;
+			SetTimeSuccess = null;
+			IsAutoloaded = false;
+			TaskIsScheduled = checkTaskIsScheduled();
 		}
 
-		public void SyncTime() {
-			DateTime dt = Timesharp.GetNistDtTcp(true);
-			if(dt == DateTime.MinValue) {
-				//means TCP method failed
-				dt = Timesharp.GetNistDtWeb(true);
-				if(dt == DateTime.MinValue) {
-					//web method failed
-					SyncFailed = true;
+		#region [SCHEDULER]
+		private bool checkTaskIsScheduled() {
+			TaskIsScheduled = false;
+			using (Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
+				if (tsrv.AllTasks.Any(t => t.Name == _taskName)) {
+					TaskIsScheduled = true;
 				}
 			}
-			DtSyncronized = dt;
+			return TaskIsScheduled;
+		}
+
+		public bool ScheduleTask(string exeLocation) {
+			using (Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
+				
+				tsrv.Execute(exeLocation)
+					.WithArguments("Sceduled_start")
+					.Once()
+					.Starting(DateTime.Now)
+					.RepeatingEvery(TimeSpan.FromHours(3))
+					.AsTask(_taskName).Definition.RegistrationInfo.Author= System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+				/*
+				Scheduler.TaskDefinition td = tsrv.NewTask();
+				td.RegistrationInfo.Description = _taskName;
+				td.RegistrationInfo.Author = _taskAuthor;
+				td.Triggers.Add(new Scheduler.CustomTrigger());
+				*/
+			}
+			return checkTaskIsScheduled();
+		}
+
+		public bool UnScheduleTask() {
+			using(Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
+				tsrv.RootFolder.DeleteTask(_taskName,true);
+			}
+			return checkTaskIsScheduled();
+		}
+		#endregion
+
+		#region [FETCH TIME]
+		public Task FetchTimeAsync() {
+			return Task.Run(() => FetchTime());
+		}
+
+		public void FetchTime() {
+			DateTime dt = Timesharp.GetNistDtWeb(true);
+			if (dt == DateTime.MinValue) {
+				FetchSuccess = false;
+				DtFetched = DateTime.MaxValue;
+			} else {
+				DtFetched = dt;
+				FetchSuccess = true;
+			}
+		}
+		#endregion
+
+		#region [SET TIME]
+		public Task SetTimeAsync() {
+			return Task.Run(() =>SetTime());
 		}
 
 		public void SetTime() {
-			SyncTime();
-			if (!Timesharp.SetTime(_dtSyncronized)) {
-				//time set failed
-				SetTimeFailed = true;
+			FetchTime();
+			if (FetchSuccess != null && FetchSuccess.Value) {
+				SetTimeSuccess = Timesharp.SetTime(_dtFetched);
+			} else {
+				SetTimeSuccess = false;
 			}
 		}
+		#endregion
+
 	}
 }
