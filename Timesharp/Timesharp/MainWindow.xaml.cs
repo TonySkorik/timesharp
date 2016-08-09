@@ -44,24 +44,29 @@ namespace TimesharpUI {
 		public MainWindow() {
 			_viewModel = new TimesharpViewModel(TimesharpUI.Properties.Settings.Default.configPath);
 			InitializeComponent();
-			MainUI.Title = $"TimeSharp v{Assembly.GetExecutingAssembly().GetName().Version}";
-		}
 
+			MainUI.Title = $"TimeSharp v{Assembly.GetExecutingAssembly().GetName().Version}";
+
+			string[] args = Environment.GetCommandLineArgs();
+			//if program started from sceduler - block schedule/unshedule buttons
+			if(args.Length > 1) {
+				AllowWindowClose = true;
+				_viewModel.IsAutoloaded = true;
+				MainUI.ShowInTaskbar = false;
+			}
+			MainUi.DataContext = _viewModel;
+		}
+		
+		/*
 		protected override void OnSourceInitialized(EventArgs e) {
 			base.OnSourceInitialized(e);
-			_createNotifyIcon();
+			//_createNotifyIcon();
 		}
+		*/
 
 		#region [WINDOW EVENTS]
 		private async void Window_Loaded(object sender, RoutedEventArgs e) {
-			MainUi.DataContext = _viewModel;
-			AllowWindowClose = false;
-
-			//if program started from sceduler - block schedule/unshedule buttons
-			string[] args= Environment.GetCommandLineArgs();
-			if (args.Length > 1) {
-				AllowWindowClose = true;
-				_viewModel.IsAutoloaded = true;
+			if (_viewModel.IsAutoloaded) {
 				await _viewModel.SetTimeAsync();
 				autoclose();
 			}
@@ -105,9 +110,7 @@ namespace TimesharpUI {
 		#region [NOTIFICATION ICON]
 		private void _createNotifyIcon() {
 			if (TrayIcon == null) {
-
 				TrayIcon = new System.Windows.Forms.NotifyIcon{
-
 					Icon = Properties.Resources.clock,
 					Text = "TimesharpUi"
 				};

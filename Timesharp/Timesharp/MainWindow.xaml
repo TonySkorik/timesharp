@@ -4,6 +4,7 @@
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:core="clr-namespace:TimesharpUI"
+		xmlns:system="clr-namespace:System;assembly=mscorlib"
 		mc:Ignorable="d"
 		x:Name="MainUI"
 		Title="TimeSharp" 
@@ -14,7 +15,7 @@
 		d:DesignHeight="170" 
 		d:DesignWidth="370"
 		WindowStartupLocation="CenterScreen"
-		ShowInTaskbar="False"
+		
 		Icon="Icons/clock.ico"
 		Loaded="Window_Loaded"
 		Closing="MainWindow_OnClosing"
@@ -34,7 +35,6 @@
 		<core:InvertableBooleanToVisibilityConverter x:Key="InvertableBooleanToVisibilityConverter"/>
 		<core:InvertableBooleanConverter x:Key="InvertableBooleanConverter"/>
 	</Window.Resources>
-
 	<Grid x:Name="MainUi">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*"/>
