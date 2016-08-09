@@ -1,27 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml.Linq;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using Timer = System.Timers;
 
@@ -32,8 +14,8 @@ namespace TimesharpUI {
 	/// </summary>
 	public partial class MainWindow : Window {
 		private IntPtr _hWnd = Process.GetCurrentProcess().Handle;
-		public bool AllowWindowClose { set; get; }
-		private bool _closingForced = false;
+		//public bool AllowWindowClose { set; get; }
+		//private bool _closingForced = false;
 		public NotifyIcon TrayIcon;
 		public ContextMenu TrayMenu;
 		public WindowState CurrentWindowState { set; get; }
@@ -48,21 +30,13 @@ namespace TimesharpUI {
 			MainUI.Title = $"TimeSharp v{Assembly.GetExecutingAssembly().GetName().Version}";
 
 			string[] args = Environment.GetCommandLineArgs();
-			//if program started from sceduler - block schedule/unshedule buttons
 			if(args.Length > 1) {
-				AllowWindowClose = true;
+				//AllowWindowClose = true;
 				_viewModel.IsAutoloaded = true;
 				MainUI.ShowInTaskbar = false;
 			}
 			MainUi.DataContext = _viewModel;
 		}
-		
-		/*
-		protected override void OnSourceInitialized(EventArgs e) {
-			base.OnSourceInitialized(e);
-			//_createNotifyIcon();
-		}
-		*/
 
 		#region [WINDOW EVENTS]
 		private async void Window_Loaded(object sender, RoutedEventArgs e) {
@@ -72,18 +46,19 @@ namespace TimesharpUI {
 			}
 		}
 
+		/*
 		private void MainWindow_OnClosing(object sender, CancelEventArgs e) {
 			AllowWindowClose = true;
-			/*
+			
 			if(!AllowWindowClose) {
 				if(_exitDialog()) {
 					AllowWindowClose = true;
 				} else {
 					e.Cancel = true;
 				}
-			}*/
+			}
 		}
-
+		*/
 		#endregion
 
 		#region [AUTOCLOSE]
@@ -91,7 +66,7 @@ namespace TimesharpUI {
 		private void autoclose() {
 			if(_viewModel.SetTimeSuccess != null && _viewModel.SetTimeSuccess.Value) {
 				MainUI.Title = $"Setting Success! Closing in {_viewModel.CloseSuccessWindowAfterMiliseconds/1000} sec";
-				AllowWindowClose = true;
+				//AllowWindowClose = true;
 
 				_closingTimer = new Timer.Timer(){
 					Interval = _viewModel.CloseSuccessWindowAfterMiliseconds
@@ -107,7 +82,42 @@ namespace TimesharpUI {
 
 		#endregion
 
-		#region [NOTIFICATION ICON]
+		#region [BUTTONS]
+		private async void ButtonSync_OnClick(object sender, RoutedEventArgs e) {
+			MainUI.Title = "Fetching time!";
+			await _viewModel.FetchTimeAsync();
+			if(_viewModel.FetchSuccess.HasValue && _viewModel.FetchSuccess.Value) {
+				MainUI.Title = "Fetching success!";
+			} else {
+				MainUI.Title = "Fetching error!";
+			}
+		}
+
+		private async void ButtonSet_OnClick(object sender, RoutedEventArgs e) {
+			MainUI.Title = "Setting time!";
+			await _viewModel.SetTimeAsync();
+			autoclose();
+		}
+
+		private void ButtonSchedule_OnClick(object sender, RoutedEventArgs e) {
+			_viewModel.ScheduleTask(Assembly.GetExecutingAssembly().Location);
+		}
+
+		private void ButtonUnschedule_OnClick(object sender, RoutedEventArgs e) {
+			_viewModel.UnScheduleTask();
+		}
+		#endregion
+
+		//VVVV disabled - don't need VVVV
+
+		#region [NOTIFICATION ICON - Disabled]
+		/*
+			protected override void OnSourceInitialized(EventArgs e) {
+				base.OnSourceInitialized(e);
+				//_createNotifyIcon();
+			}
+		*/
+		/*
 		private void _createNotifyIcon() {
 			if (TrayIcon == null) {
 				TrayIcon = new System.Windows.Forms.NotifyIcon{
@@ -143,10 +153,11 @@ namespace TimesharpUI {
 				CurrentWindowState = WindowState.Minimized;
 			}
 		}
+		*/
 		#endregion
 
-		#region [NOTIFICATION AREA MENU]
-
+		#region [NOTIFICATION ICON CONTEXT MENU - Disabled]
+		/*
 		private bool _exitDialog() {
 			return System.Windows.Forms.MessageBox.Show("Exit TimeSharp?", "Confirm exit", MessageBoxButtons.YesNo,
 												MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes;
@@ -159,39 +170,10 @@ namespace TimesharpUI {
 					Close();
 				}
 			}
-		}
-		private void SyncSetMenu_OnClick(object sender, RoutedEventArgs e) {
-		}
+		}		
+		*/
 		#endregion
 
-		#region [BUTTONS]
-		private async void ButtonSync_OnClick(object sender, RoutedEventArgs e) {
-			MainUI.Title = "Fetching time!";
-			await _viewModel.FetchTimeAsync();
-			if (_viewModel.FetchSuccess.HasValue && _viewModel.FetchSuccess.Value) {
-				MainUI.Title = "Fetching success!";
-			} else {
-				MainUI.Title = "Fetching error!";
-			}
-		}
-
-		private async void ButtonSet_OnClick(object sender, RoutedEventArgs e) {
-			MessageBoxButton mb = MessageBoxButton.YesNo;
-			MessageBoxImage mbImage = MessageBoxImage.Question;
-			
-			MainUI.Title = "Setting time!";
-			await _viewModel.SetTimeAsync();
-			autoclose();
-		}
-
-		private void ButtonSchedule_OnClick(object sender, RoutedEventArgs e) {
-			_viewModel.ScheduleTask(Assembly.GetExecutingAssembly().Location);
-		}
-
-		private void ButtonUnschedule_OnClick(object sender, RoutedEventArgs e) {
-			_viewModel.UnScheduleTask();
-		}
-		#endregion
 
 	}
 }

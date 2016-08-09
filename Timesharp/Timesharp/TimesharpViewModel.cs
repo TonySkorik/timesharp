@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Principal;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml.Linq;
@@ -82,6 +79,7 @@ namespace TimesharpUI {
 
 		#endregion
 
+		#region [CONSTRUCTOR]
 		public TimesharpViewModel(string configPath) {
 			CloseSuccessWindowAfterMiliseconds = 10000; // 10 seconds
 			try {
@@ -109,6 +107,7 @@ namespace TimesharpUI {
 			
 			TaskIsScheduled = checkTaskIsScheduled();
 		}
+		#endregion
 
 		#region [SCHEDULER]
 		private bool checkTaskIsScheduled() {

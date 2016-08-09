@@ -4,7 +4,6 @@
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:core="clr-namespace:TimesharpUI"
-		xmlns:system="clr-namespace:System;assembly=mscorlib"
 		mc:Ignorable="d"
 		x:Name="MainUI"
 		Title="TimeSharp" 
@@ -15,21 +14,17 @@
 		d:DesignHeight="170" 
 		d:DesignWidth="370"
 		WindowStartupLocation="CenterScreen"
-		
 		Icon="Icons/clock.ico"
 		Loaded="Window_Loaded"
-		Closing="MainWindow_OnClosing"
 		>
 	<Window.Resources>
-		<ContextMenu x:Key="TrayMenu">
+		<!--<ContextMenu x:Key="TrayMenu">
 			<MenuItem Header="Show / Hide" Click="_showHideMainWindow" />
-			<!--			<MenuItem Header="Item2" />-->
-
 			<Separator />
 			<MenuItem Header="Sync &amp; Set" Click="SyncSetMenu_OnClick" />
 			<Separator />
 			<MenuItem Header="Exit" Click="TrayMenuExit_OnClick"/>
-		</ContextMenu>
+		</ContextMenu>-->
 		<core:BoolToColorConverter x:Key="BoolToColorConverter"/>
 		<core:MinDateTimeToNotFetchedConverter x:Key="MinDateTimeToNotFetchedConverter"/>
 		<core:InvertableBooleanToVisibilityConverter x:Key="InvertableBooleanToVisibilityConverter"/>
@@ -42,10 +37,47 @@
 		</Grid.RowDefinitions>	
 		<TextBox BorderThickness="0" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="25" Text="{Binding Path=DtFetched, Converter={StaticResource MinDateTimeToNotFetchedConverter}}"/>
 		<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-			<Button Background="{Binding Path=FetchSuccess, Converter={StaticResource BoolToColorConverter}}" Content="Fetch" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" Click="ButtonSync_OnClick"/>
-			<Button Background="{Binding Path=SetTimeSuccess, Converter={StaticResource BoolToColorConverter}}" Content="Set" Width="100" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" Click="ButtonSet_OnClick"/>
-			<Button Background="Aqua" IsEnabled="{Binding Path=IsAutoloaded, Converter={StaticResource InvertableBooleanConverter}, ConverterParameter=Inverted}" Visibility="{Binding Path=TaskIsScheduled, Converter={StaticResource InvertableBooleanToVisibilityConverter}, ConverterParameter=Inverted}" Content="Schedule" Width="70" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" ToolTip="Schedule time update" Click="ButtonSchedule_OnClick"/>
-			<Button Background="BurlyWood" IsEnabled="{Binding Path=IsAutoloaded, Converter={StaticResource InvertableBooleanConverter}, ConverterParameter=Inverted}" Visibility="{Binding Path=TaskIsScheduled, Converter={StaticResource InvertableBooleanToVisibilityConverter}, ConverterParameter=Normal}" Content="Unschedule" Width="70" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" ToolTip="Remove time update from scheduler" Click="ButtonUnschedule_OnClick"/>
+			<Button Background="{Binding Path=FetchSuccess, Converter={StaticResource BoolToColorConverter}}" 
+					Content="Fetch" 
+					Width="100" 
+					Height="40" 
+					HorizontalAlignment="Center" 
+					VerticalAlignment="Center" 
+					Margin="10" Click="ButtonSync_OnClick"
+			/>
+			<Button Background="{Binding Path=SetTimeSuccess, Converter={StaticResource BoolToColorConverter}}" 
+					Content="Set" 
+					Width="100" 
+					Height="40" 
+					HorizontalAlignment="Center" 
+					VerticalAlignment="Center" 
+					Margin="10" 
+					Click="ButtonSet_OnClick"
+			/>
+			<Button Background="Aqua" 
+					IsEnabled="{Binding Path=IsAutoloaded, Converter={StaticResource InvertableBooleanConverter}, ConverterParameter=Inverted}" 
+					Visibility="{Binding Path=TaskIsScheduled, Converter={StaticResource InvertableBooleanToVisibilityConverter}, ConverterParameter=Inverted}" 
+					Content="Schedule" 
+					Width="70" 
+					Height="40" 
+					HorizontalAlignment="Center" 
+					VerticalAlignment="Center" 
+					Margin="10" 
+					ToolTip="Schedule time update" 
+					Click="ButtonSchedule_OnClick"
+			/>
+			<Button Background="BurlyWood" 
+					IsEnabled="{Binding Path=IsAutoloaded, Converter={StaticResource InvertableBooleanConverter}, ConverterParameter=Inverted}" 
+					Visibility="{Binding Path=TaskIsScheduled, Converter={StaticResource InvertableBooleanToVisibilityConverter}, ConverterParameter=Normal}" 
+					Content="Unschedule" 
+					Width="70" 
+					Height="40" 
+					HorizontalAlignment="Center" 
+					VerticalAlignment="Center" 
+					Margin="10" 
+					ToolTip="Remove time update from scheduler" 
+					Click="ButtonUnschedule_OnClick"
+			/>
 		</StackPanel>
 	</Grid>
 </Window>
