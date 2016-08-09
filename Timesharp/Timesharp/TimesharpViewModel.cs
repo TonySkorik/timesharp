@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -94,13 +95,13 @@ namespace TimesharpUi {
 					.Once()
 					.Starting(DateTime.Now)
 					.RepeatingEvery(TimeSpan.FromHours(3))
-					.AsTask(_taskName).Definition.RegistrationInfo.Author= System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-				/*
-				Scheduler.TaskDefinition td = tsrv.NewTask();
-				td.RegistrationInfo.Description = _taskName;
-				td.RegistrationInfo.Author = _taskAuthor;
-				td.Triggers.Add(new Scheduler.CustomTrigger());
-				*/
+					.AsTask(_taskName);
+
+				Scheduler.TaskDefinition tskDef = tsrv.FindTask(_taskName).Definition;
+
+				tsrv.RootFolder.RegisterTaskDefinition(_taskName, tskDef,
+					Scheduler.TaskCreation.CreateOrUpdate, "SYSTEM", null,
+					Scheduler.TaskLogonType.ServiceAccount);
 			}
 			return checkTaskIsScheduled();
 		}
