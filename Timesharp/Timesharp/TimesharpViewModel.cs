@@ -124,6 +124,7 @@ namespace TimesharpUI {
 			using (Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
 				Scheduler.TaskDefinition tskDef = tsrv.FindTask(tskName).Definition;
 
+				tskDef.Settings.RunOnlyIfNetworkAvailable = true;
 				tskDef.RegistrationInfo.Author = _taskAuthor;
 				tskDef.RegistrationInfo.Documentation = "TimeSharp time keeper utility";
 				tskDef.Principal.RunLevel = Scheduler.TaskRunLevel.Highest;
