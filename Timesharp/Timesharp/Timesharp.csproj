@@ -7,8 +7,8 @@
     <ProjectGuid>{D00CE854-5538-45B0-B44D-7F59B3CCF2C3}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Timesharp</RootNamespace>
-    <AssemblyName>Timesharp</AssemblyName>
+    <RootNamespace>TimesharpUI</RootNamespace>
+    <AssemblyName>TimesharpUI</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -113,6 +113,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="clock.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Settings.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

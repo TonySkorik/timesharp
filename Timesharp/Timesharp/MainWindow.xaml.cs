@@ -26,7 +26,7 @@ using ContextMenu = System.Windows.Controls.ContextMenu;
 using Timer = System.Timers;
 
 
-namespace TimesharpUi {
+namespace TimesharpUI {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
@@ -42,7 +42,7 @@ namespace TimesharpUi {
 		private Timer.Timer _closingTimer;
 
 		public MainWindow() {
-			_viewModel = new TimesharpViewModel();
+			_viewModel = new TimesharpViewModel(TimesharpUI.Properties.Settings.Default.configPath);
 			InitializeComponent();
 			MainUI.Title = $"TimeSharp v{Assembly.GetExecutingAssembly().GetName().Version}";
 		}
@@ -106,7 +106,7 @@ namespace TimesharpUi {
 
 				TrayIcon = new System.Windows.Forms.NotifyIcon{
 
-					Icon = TimesharpUi.Properties.Resources.clock,
+					Icon = Properties.Resources.clock,
 					Text = "TimesharpUi"
 				};
 				TrayMenu = Resources["TrayMenu"] as ContextMenu;

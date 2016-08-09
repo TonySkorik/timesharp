@@ -9,7 +9,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace TimesharpUi {
+namespace TimesharpUI {
+	public enum Units {Day=86400, Hour=3600, Minute=60}
+
 	static class Timesharp {
 		#region [GET Time]
 		
