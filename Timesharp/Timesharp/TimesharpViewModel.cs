@@ -100,8 +100,9 @@ namespace TimesharpUi {
 				Scheduler.TaskDefinition tskDef = tsrv.FindTask(_taskName).Definition;
 
 				tsrv.RootFolder.RegisterTaskDefinition(_taskName, tskDef,
-					Scheduler.TaskCreation.CreateOrUpdate, "SYSTEM", null,
+					Scheduler.TaskCreation.CreateOrUpdate, "Administrators", null,
 					Scheduler.TaskLogonType.ServiceAccount);
+
 			}
 			return checkTaskIsScheduled();
 		}
