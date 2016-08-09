@@ -57,7 +57,7 @@ namespace TimesharpUI {
 			MainUi.DataContext = _viewModel;
 			AllowWindowClose = false;
 
-			//if program started from sceduler
+			//if program started from sceduler - block schedule/unshedule buttons
 			string[] args= Environment.GetCommandLineArgs();
 			if (args.Length > 1) {
 				AllowWindowClose = true;
@@ -68,13 +68,15 @@ namespace TimesharpUI {
 		}
 
 		private void MainWindow_OnClosing(object sender, CancelEventArgs e) {
+			AllowWindowClose = true;
+			/*
 			if(!AllowWindowClose) {
 				if(_exitDialog()) {
 					AllowWindowClose = true;
 				} else {
 					e.Cancel = true;
 				}
-			}
+			}*/
 		}
 
 		#endregion
@@ -83,15 +85,15 @@ namespace TimesharpUI {
 
 		private void autoclose() {
 			if(_viewModel.SetTimeSuccess != null && _viewModel.SetTimeSuccess.Value) {
-				MainUI.Title = "Setting Success! Closing in 10 sec";
+				MainUI.Title = $"Setting Success! Closing in {_viewModel.CloseSuccessWindowAfterMiliseconds/1000} sec";
 				AllowWindowClose = true;
 
-				_closingTimer = new Timer.Timer() {
-					Interval = 10000 //10 seconds
+				_closingTimer = new Timer.Timer(){
+					Interval = _viewModel.CloseSuccessWindowAfterMiliseconds
 				};
 				_closingTimer.Elapsed += (o, args) => {
-					Dispatcher.Invoke(Close);
-				};
+											Dispatcher.Invoke(Close);
+										};
 				_closingTimer.Start();
 			} else {
 				MainUI.Title = "Setting time error!";
@@ -173,24 +175,7 @@ namespace TimesharpUI {
 		private async void ButtonSet_OnClick(object sender, RoutedEventArgs e) {
 			MessageBoxButton mb = MessageBoxButton.YesNo;
 			MessageBoxImage mbImage = MessageBoxImage.Question;
-			/*
-			if (_viewModel.FetchSuccess.HasValue) {
-				if (!_viewModel.FetchSuccess.Value) {
-					if (System.Windows.MessageBox.Show("Do you want to fetch time from server again?", "Time fetch error", mb, mbImage)
-						== MessageBoxResult.Yes) {
-						await _viewModel.FetchTimeAsync();
-					}
-					return;
-				}
-			} else {
-				if (System.Windows.MessageBox.Show("Do you want to fetch time from server?", "Time not yet fetched", mb, mbImage)
-					== MessageBoxResult.Yes) {
-					await _viewModel.FetchTimeAsync();
-				}
-
-				return;
-			}
-			*/
+			
 			MainUI.Title = "Setting time!";
 			await _viewModel.SetTimeAsync();
 			autoclose();
@@ -204,7 +189,6 @@ namespace TimesharpUI {
 			_viewModel.UnScheduleTask();
 		}
 		#endregion
-
 
 	}
 }

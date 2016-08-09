@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
@@ -28,8 +29,9 @@ namespace TimesharpUI {
 		private string _taskArgs = "Scheduled_start";
 		private string _adminsGroupName = "Administrators";
 
-		private long _intervalSeconds = 10800L; // 3 hours default interval between program
-		
+		private long _taskIntervalSeconds = 10800L; // 3 hours default interval between program
+		private int _closeSuccessWindowAfterMiliseconds; //10 seconds
+
 		private DateTime _dtFetched;
 		public DateTime DtFetched {
 			set {
@@ -73,17 +75,23 @@ namespace TimesharpUI {
 				NotifyPropertyChanged();
 			}
 		}
+		public int CloseSuccessWindowAfterMiliseconds {
+			get { return _closeSuccessWindowAfterMiliseconds; }
+			set { _closeSuccessWindowAfterMiliseconds = value; }
+		}
+
 		#endregion
 
 		public TimesharpViewModel(string configPath) {
-
+			CloseSuccessWindowAfterMiliseconds = 10000; // 10 seconds
 			try {
 				XDocument cfg = XDocument.Load(configPath);
 				Units u;
 				Units.TryParse(cfg.Root.Element("TaskInterval").Attribute("Unit").Value, true, out u);
-				_intervalSeconds = Int32.Parse(cfg.Root.Element("TaskInterval").Value)*(int) u;
+				_taskIntervalSeconds = Int32.Parse(cfg.Root.Element("TaskInterval").Value)*(int) u;
+				_closeSuccessWindowAfterMiliseconds = int.Parse(cfg.Root.Element("CloseScheduledWindowAfterSeconds").Value)*1000;
+
 				_taskName = cfg.Root.Element("TaskName").Value;
-				_taskAuthor = cfg.Root.Element("TaskAuthor").Value;
 				_taskArgs = cfg.Root.Element("TaskArgs").Value;
 
 				_bootTaskName = cfg.Root.Element("BootTaskName").Value;
@@ -98,6 +106,7 @@ namespace TimesharpUI {
 			FetchSuccess = null;
 			SetTimeSuccess = null;
 			IsAutoloaded = false;
+			
 			TaskIsScheduled = checkTaskIsScheduled();
 		}
 
@@ -117,6 +126,7 @@ namespace TimesharpUI {
 				Scheduler.TaskDefinition tskDef = tsrv.FindTask(tskName).Definition;
 
 				tskDef.RegistrationInfo.Author = _taskAuthor;
+				tskDef.RegistrationInfo.Documentation = "TimeSharp time keeper utility";
 				tskDef.Principal.RunLevel = Scheduler.TaskRunLevel.Highest;
 				tskDef.Settings.MultipleInstances = Scheduler.TaskInstancesPolicy.IgnoreNew;
 				tskDef.Settings.WakeToRun = false;
@@ -129,53 +139,30 @@ namespace TimesharpUI {
 		}
 
 		public bool ScheduleTask(string exeLocation) {
-			using (Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
-				//task for interval
-				tsrv.Execute(exeLocation)
-					.WithArguments(_taskArgs)
-					.Once()
-					.Starting(DateTime.Now)
-					.RepeatingEvery(TimeSpan.FromHours(3))
-					.AsTask(_taskName);
-
-				
-				godmodeTask(_taskName);
-				/*
-				tskDef.RegistrationInfo.Author = _taskAuthor;
-				tskDef.Principal.RunLevel = Scheduler.TaskRunLevel.Highest;
-				tskDef.Settings.MultipleInstances = Scheduler.TaskInstancesPolicy.IgnoreNew;
-				tskDef.Settings.WakeToRun = false;
-				tskDef.Settings.Volatile = false;
-				tskDef.Settings.Compatibility = Scheduler.TaskCompatibility.V2_1;
-				*/
-				/*
-				tsrv.RootFolder.RegisterTaskDefinition(_taskName, tskDef,
-					Scheduler.TaskCreation.CreateOrUpdate, "Administrators", null,
-					Scheduler.TaskLogonType.Group);
-				*/
-				//boot task
-				tsrv.Execute(exeLocation)
-					.WithArguments(_taskArgs)
-					.OnBoot()
-					.AsTask(_bootTaskName);
-
-				//Scheduler.TaskDefinition bootTskDef = tsrv.FindTask(_bootTaskName).Definition;
-
-				godmodeTask(_bootTaskName);
-				
-				/*
-				bootTskDef.RegistrationInfo.Author = _taskAuthor;
-				bootTskDef.Principal.RunLevel = Scheduler.TaskRunLevel.Highest;
-				bootTskDef.Settings.MultipleInstances = Scheduler.TaskInstancesPolicy.IgnoreNew;
-				bootTskDef.Settings.WakeToRun = false;
-				bootTskDef.Settings.Volatile = false;
-				bootTskDef.Settings.Compatibility = Scheduler.TaskCompatibility.V2_1;
-				*/
-				/*
-				tsrv.RootFolder.RegisterTaskDefinition(_bootTaskName, bootTskDef,
-					Scheduler.TaskCreation.CreateOrUpdate, "Administrators", null,
-					Scheduler.TaskLogonType.Group);
-				*/
+			try {
+				using (Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
+					//task for interval
+					tsrv.Execute(exeLocation)
+						.InWorkingDirectory(Path.GetDirectoryName(exeLocation))
+						.WithArguments(_taskArgs)
+						.Once()
+						.Starting(DateTime.Now)
+						.RepeatingEvery(TimeSpan.FromSeconds(_taskIntervalSeconds))
+						.AsTask(_taskName);
+					
+					godmodeTask(_taskName);
+					
+					//boot task
+					tsrv.Execute(exeLocation)
+						.WithArguments(_taskArgs)
+						.OnBoot()
+						.AsTask(_bootTaskName);
+					godmodeTask(_bootTaskName);
+				}
+			} catch (Exception e) {
+				MessageBox.Show($"Error scheduling task. Try changing <AdminsSytemUserGroup> or <TaskInterval> in Settings.xml.\nOriginal mesage: {e.Message}", "Task scheduling error", MessageBoxButton.OK,
+								MessageBoxImage.Error);
+				UnScheduleTask();
 			}
 			return checkTaskIsScheduled();
 		}
