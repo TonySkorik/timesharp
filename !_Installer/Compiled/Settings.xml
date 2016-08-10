@@ -1,9 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?> 
 <Settings>
-	<TaskInterval Unit="Minute">1</TaskInterval>
+	<TaskInterval Unit="Hour">3</TaskInterval>
 	<CloseScheduledWindowAfterSeconds>1</CloseScheduledWindowAfterSeconds>
 	<TaskName>TimeSharp_sync</TaskName>
-	<BootTaskName>TimeSharp_boot</BootTaskName>
 	<TaskArgs>Scheduled_start</TaskArgs>
 	<AdminsSytemUserGroup>Администраторы</AdminsSytemUserGroup>
 <!--<AdminsSytemUserGroup>Administrators</AdminsSytemUserGroup>-->

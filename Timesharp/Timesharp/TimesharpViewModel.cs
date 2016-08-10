@@ -20,7 +20,6 @@ namespace TimesharpUI {
 
 		#region [P & F]
 
-		private string _bootTaskName = "TimeSharp_boot";
 		private string _taskName = "TimeSharp_sync";
 		private string _taskAuthor = "TS";
 		private string _taskArgs = "Scheduled_start";
@@ -91,9 +90,7 @@ namespace TimesharpUI {
 
 				_taskName = cfg.Root.Element("TaskName").Value;
 				_taskArgs = cfg.Root.Element("TaskArgs").Value;
-
-				_bootTaskName = cfg.Root.Element("BootTaskName").Value;
-
+				
 				_adminsGroupName = cfg.Root.Element("AdminsSytemUserGroup").Value;
 			} catch (Exception e) {
 				MessageBox.Show($"Error loading config.\nOriginal mesage: {e.Message}", "Config loading error", MessageBoxButton.OK,
@@ -120,10 +117,11 @@ namespace TimesharpUI {
 			return TaskIsScheduled;
 		}
 
-		private void godmodeTask(string tskName) {
+		private void setupTask(string tskName) {
 			using (Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
 				Scheduler.TaskDefinition tskDef = tsrv.FindTask(tskName).Definition;
 
+				tskDef.Settings.DisallowStartIfOnBatteries = false;
 				tskDef.Settings.RunOnlyIfNetworkAvailable = true;
 				tskDef.RegistrationInfo.Author = _taskAuthor;
 				tskDef.RegistrationInfo.Documentation = "TimeSharp time keeper utility";
@@ -131,6 +129,18 @@ namespace TimesharpUI {
 				tskDef.Settings.MultipleInstances = Scheduler.TaskInstancesPolicy.IgnoreNew;
 				tskDef.Settings.WakeToRun = false;
 				tskDef.Settings.Compatibility = Scheduler.TaskCompatibility.V2_1;
+
+				//add auxiliary triggers
+				Scheduler.SessionStateChangeTrigger unlockSessionTrigger = new Scheduler.SessionStateChangeTrigger(Scheduler.TaskSessionStateChangeType.SessionUnlock) {
+					Enabled = true
+				};
+				Scheduler.LogonTrigger logonTrigger = new Scheduler.LogonTrigger() {
+					Enabled = true,
+					Delay = TimeSpan.FromMinutes(1),
+					StartBoundary = DateTime.Now,
+					ExecutionTimeLimit = TimeSpan.FromMinutes(5)
+				};
+				tskDef.Triggers.AddRange(new Scheduler.Trigger[] { unlockSessionTrigger, logonTrigger });
 
 				tsrv.RootFolder.RegisterTaskDefinition(tskName, tskDef,
 					Scheduler.TaskCreation.CreateOrUpdate, _adminsGroupName, null,
@@ -149,15 +159,8 @@ namespace TimesharpUI {
 						.Starting(DateTime.Now)
 						.RepeatingEvery(TimeSpan.FromSeconds(_taskIntervalSeconds))
 						.AsTask(_taskName);
-					
-					godmodeTask(_taskName);
-					
-					//boot task
-					tsrv.Execute(exeLocation)
-						.WithArguments(_taskArgs)
-						.OnBoot()
-						.AsTask(_bootTaskName);
-					godmodeTask(_bootTaskName);
+
+					setupTask(_taskName);
 				}
 			} catch (Exception e) {
 				MessageBox.Show($"Error scheduling task. Try changing <AdminsSytemUserGroup> or <TaskInterval> in Settings.xml.\nOriginal mesage: {e.Message}", "Task scheduling error", MessageBoxButton.OK,
@@ -170,7 +173,6 @@ namespace TimesharpUI {
 		public bool UnScheduleTask() {
 			using(Scheduler.TaskService tsrv = new Scheduler.TaskService()) {
 				tsrv.RootFolder.DeleteTask(_taskName,false);
-				tsrv.RootFolder.DeleteTask(_bootTaskName, false);
 			}
 			return checkTaskIsScheduled();
 		}
