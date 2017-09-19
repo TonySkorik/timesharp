@@ -91,6 +91,8 @@ namespace TimesharpUI {
 			request.ContentType = "application/x-www-form-urlencoded";
 			request.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore); //No caching
 			HttpWebResponse response;
+			ServicePointManager.Expect100Continue = true;
+			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
 			try {
 				response = (HttpWebResponse)request.GetResponse();
